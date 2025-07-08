@@ -1,0 +1,142 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       String @id @default(cuid())
+  name     String
+  email    String @unique
+  password String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  //relations
+  tests     Test[]
+  analytics Analytics[]
+
+  @@map("users")
+}
+
+model Topic {
+  id          String   @id
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  MCQ MCQ[]
+
+  @@map("topics")
+}
+
+model MCQ {
+  id        String    @id @default(cuid())
+  question  String
+  optionA   String
+  optionB   String
+  optionC   String
+  optionD   String
+  correct   String
+  topic     Topic     @relation(fields: [topicId], references: [id])
+  topicId   String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  tests     TestMCQ[]
+
+  @@map("mcqs")
+}
+
+model CodingQuestion {
+  id          String               @id @default(cuid())
+  title       String
+  description String
+  tests       TestCodingQuestion[]
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  @@map("coding_questions")
+}
+
+model Test {
+  id                String  @id @default(cuid())
+  title             String
+  description       String?
+  numberOfQuestions Int
+  mcqCount          Int
+  codingCount       Int
+  totalScore        Int
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String //fk
+
+  codingQuestions TestCodingQuestion[]
+  mcqQuestions    TestMCQ[]
+  analytics       Analytics[]
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  @@map("tests")
+}
+
+model TestCodingQuestion {
+  id               String         @id @default(cuid())
+  test             Test           @relation(fields: [testId], references: [id])
+  testId           String
+  codingQuestion   CodingQuestion @relation(fields: [codingQuestionId], references: [id])
+  codingQuestionId String
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@unique([testId, codingQuestionId])
+  @@map("test_coding_questions")
+}
+
+model TestMCQ {
+  id            String   @id @default(cuid())
+  test          Test     @relation(fields: [testId], references: [id])
+  testId        String
+  mcqQuestion   MCQ      @relation(fields: [mcqQuestionId], references: [id])
+  mcqQuestionId String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([testId, mcqQuestionId])
+  @@map("test_mcqs")
+}
+
+model Analytics {
+  id String @id @default(cuid())
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  test   Test   @relation(fields: [testId], references: [id])
+  testId String
+
+  totalQuestions           Int
+  attemptedQuestions       Int
+  notAttempted             Int
+  totalScore               Int
+  noOfCorrect              Int
+  mcqCorrect               Int
+  codingCorrect            Int
+  obtainedScore            Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("analytics")
+}
