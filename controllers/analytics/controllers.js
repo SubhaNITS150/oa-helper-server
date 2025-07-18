@@ -18,7 +18,7 @@ export const postAnalytics = async(req, res) => {
         } = req.body;
 
     try {
-        const res = await prisma.analytics.create({
+        const newRes = await prisma.analytics.create({
             data: {
                 userId,
                 testId,
@@ -33,7 +33,7 @@ export const postAnalytics = async(req, res) => {
             }
         });
 
-        res.status(200).send({
+        return res.status(200).send({
             message: "Analytics data saved successfully",
         })
     } catch(error){
